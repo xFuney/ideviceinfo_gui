@@ -1,0 +1,10 @@
+# Ignore node_modules and bot_config.json
+
+node_modules
+bot_config.json
+giveaways.json
+/nbproject/private/
+/nbproject/*
+nbproject
+db/*
+ff*

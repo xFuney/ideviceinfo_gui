@@ -1,0 +1,26 @@
+pre code {
+  background-color: #37474f;
+  border: 1px solid #999;
+  color: #ffffff;
+  overflow: auto;
+  display: block;
+  width: 97%;
+}
+
+pre code_print {
+  border: 1px solid #999;
+  overflow: auto;
+  display: block;
+  width: 97%;
+}
+.example-print {
+    display: none;
+}
+@media print {
+   .example-screen {
+       display: none;
+    }
+    .example-print {
+       display: block;
+    }
+}
