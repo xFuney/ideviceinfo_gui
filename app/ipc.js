@@ -6,6 +6,7 @@ const ipc = require('electron').ipcMain;
 
 const iDeviceKit = require('idevicekit');
 const axios = require('axios');
+const idevicekit = require('idevicekit');
 //const usbDetect = require('usb-detection');
  
 
@@ -37,17 +38,23 @@ async function getDevices() {
                 } else {
                     resI = n;
                 }
-                
+
+
                 iDeviceKit.getProperties(res[n])
                 .then( (result) => {
                     // Got device.
-                    ipcWindow.webContents.send('new_device', result)
+                    iDeviceKit.diagnostics(res[n]).then( (out) => {
+                        ipcWindow.webContents.send('new_device', result, out)
+                    })
+                    
+                    
                 })
                 .catch( (error) => {
                     // Failed to get properties, all failed.
                     ipcWindow.webContents.send('lame_err', error)
                 });
             }
+            
 
             var interval = setInterval(function() {
                 if (resI == res.length-1) {

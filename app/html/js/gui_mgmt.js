@@ -14,10 +14,11 @@ var Sidenav = document.getElementById('mobile-demo');
 var Sidenav_button = document.getElementById('sidebutton');
 
 var DeviceDB = [];
+var DiagDB = [];
 
 function printDiv(divName) {
     var printContents = document.getElementById(divName).innerHTML;
-    var originalContents = Page;
+    var originalContents = Page.innerHTML;
 
     Page.innerHTML = printContents;
 
@@ -72,9 +73,21 @@ function getDeviceTable(serial) {
     return found;
 }
 
+function getDiagTable(serial) {
+    var found = false;
+    for (const n in DeviceDB) {
+        if (DeviceDB[n].SerialNumber == serial) {
+            found = DiagDB[n];
+        }
+    }
+
+    return found;
+}
+
 function inspectDevice(serial) {
     // Get device.
     var Device = getDeviceTable(serial);
+    var DeviceDiag = getDiagTable(serial);
     //console.log(Device)
     resetPage('device', Device.UniqueDeviceID);
     PageTitle.innerHTML = Device.ProductType + " - iOS " + Device.ProductVersion;
@@ -108,25 +121,41 @@ function inspectDevice(serial) {
     WiFi Address: ` + Device.WiFiAddress + `
     Bluetooth Address: ` + Device.BluetoothAddress + `
     Ethernet Address: ` + ethAdr + `
-  
     </code></pre>
     `
 
     PrintPage.innerHTML += `
     <h5><strong>System Info</strong></h5>
     <pre><code_print>
-      Hardware Model: ` + Device.HardwareModel + `
-      Hardware Platform: ` + hwPlt + `
-      Firmware Version: ` + Device.FirmwareVersion +  `
-      --------------------------------------------------
-      Serial Number: ` + Device.SerialNumber + `
-      MLB Serial Number: ` + Device.MLBSerialNumber + `
-      Die ID: ` + Device.DieID + `
-      --------------------------------------------------
-      WiFi Address: ` + Device.WiFiAddress + `
-      Bluetooth Address: ` + Device.BluetoothAddress + `
-      Ethernet Address: ` + ethAdr + `
-    
+    Hardware Model: ` + Device.HardwareModel + `
+    Hardware Platform: ` + hwPlt + `
+    Firmware Version: ` + Device.FirmwareVersion +  `
+    --------------------------------------------------
+    Serial Number: ` + Device.SerialNumber + `
+    MLB Serial Number: ` + Device.MLBSerialNumber + `
+    Die ID: ` + Device.DieID + `
+    --------------------------------------------------
+    WiFi Address: ` + Device.WiFiAddress + `
+    Bluetooth Address: ` + Device.BluetoothAddress + `
+    Ethernet Address: ` + ethAdr + `
+    </code_print></pre>
+    `
+
+    Page.innerHTML += `
+    <h5>Battery Info</h5>
+    <pre><code>
+    Charge Cycle Count: ` + DeviceDiag.GasGauge.CycleCount + `
+    Battery Design Capacity: ` +  DeviceDiag.GasGauge.DesignCapacity + `mAh
+    Full Charge Capacity: ` + DeviceDiag.GasGauge.FullChargeCapacity +  `%
+    </code></pre>
+    `
+
+    PrintPage.innerHTML += `
+    <h5><strong>Battery Info</strong></h5>
+    <pre><code_print>
+    Charge Cycle Count: ` + DeviceDiag.GasGauge.CycleCount + `
+    Battery Design Capacity: ` +  DeviceDiag.GasGauge.DesignCapacity + `mAh
+    Full Charge Capacity: ` + DeviceDiag.GasGauge.FullChargeCapacity +  `%
     </code_print></pre>
     `
 
@@ -144,7 +173,6 @@ function inspectDevice(serial) {
     IMSI: ` + imsi + `
     
     Carrier: ` + carrier + `
-    
         </code></pre>
         `
     
@@ -156,15 +184,15 @@ function inspectDevice(serial) {
     IMSI: ` + imsi + `
     
     Carrier: ` + carrier + `
-    
         </code_print></pre>
         `
       }
 
 }
 
-function addDevice(device) {
+function addDevice(device, diag) {
     DeviceDB.push(device);
+    DiagDB.push(diag)
     var devName = device.DeviceName || device.SerialNumber
     Sidenav.innerHTML += `<li><a class="white-text" onmouseup="inspectDevice('` + device.SerialNumber + `');">` + devName + `</a></li>`
 }
@@ -220,9 +248,10 @@ ipcRenderer.on('got_device', (event, db) => {
     playAudio("waiting")
 });
 
-ipcRenderer.on('new_device', (event, device) => {
+ipcRenderer.on('new_device', (event, device, out) => {
     console.log(device)
-    addDevice(device)
+    console.log(out)
+    addDevice(device, out)
 })
 
 ipcRenderer.on('success', (event, result) => {
