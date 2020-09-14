@@ -40,7 +40,7 @@ function shutdown_device(udid) {
 }
 
 
-function resetPage(st, sn) {
+function resetPage(st, sn, acs) {
     if (st == "device") {
         Page.innerHTML = `
         <br />
@@ -49,11 +49,34 @@ function resetPage(st, sn) {
           <a class="waves-effect waves-light btn" onmouseup="printDiv('print_page');">Print</a>
           <a class="waves-effect waves-light btn red" onmouseup="reboot_device('` + sn + `');" id="rebootbutton" >Reboot</a>
           <a class="waves-effect waves-light btn red" onmouseup="shutdown_device('` + sn + `');" id="shutdownbutton">Shutdown</a>
+          <div id="activ"></div>
         </center>
         `
+
+        if (acs) {
+            // Activated, so display deactivate.
+            document.getElementById('activ').innerHTML = `
+            <br />
+            <a class="waves-effect waves-light btn red" onmouseup="deactivate('` + sn + `');" id="deactivatebutton">Deactivate</a>
+            `
+        } else {
+            // Deactivated, so display activate.
+            document.getElementById('activ').innerHTML += `
+            <br />
+            <a class="waves-effect waves-light btn green" onmouseup="activate('` + sn + `');" id="activatebutton">Activate</a>
+            `
+        }
     }
 
     PrintPage.innerHTML = "";
+}
+
+function deactivate(udid) {
+    ipcRenderer.send("deactivate", udid)
+}
+
+function activate(udid) {
+    ipcRenderer.send("activate", udid)
 }
 
 function resetSidebar() {
@@ -89,7 +112,7 @@ function inspectDevice(serial) {
     var Device = getDeviceTable(serial);
     var DeviceDiag = getDiagTable(serial);
     //console.log(Device)
-    resetPage('device', Device.UniqueDeviceID);
+    resetPage('device', Device.UniqueDeviceID, Device.ActivationState == "Activated" ? true : false);
     PageTitle.innerHTML = Device.ProductType + " - iOS " + Device.ProductVersion;
   
     Page.innerHTML += `
@@ -97,11 +120,11 @@ function inspectDevice(serial) {
     `
 
     if(Device.ActivationState != "Activated") {
-      Page.innerHTML += '<h3>Device Status: <span class="red-text">Not Activated</span></h3>';
-      PrintPage.innerHTML += '<h3>Device Status: <span class="red-text">Not Activated</span></h3>';
+      Page.innerHTML += '<h3>Device Status: <span class="red-text" id="devstat">Not Activated</span></h3>';
+      PrintPage.innerHTML += '<h3>Device Status: <span class="red-text" id="devstat_print>Not Activated</span></h3>';
     } else {
-      Page.innerHTML += '<h3>Device Status: <span class="green-text">Activated</span></h3>';
-      PrintPage.innerHTML += '<h3>Device Status: <span class="green-text">Activated</span></h3>';
+      Page.innerHTML += '<h3>Device Status: <span class="green-text" id="devstat">Activated</span></h3>';
+      PrintPage.innerHTML += '<h3>Device Status: <span class="green-text" id="devstat_print">Activated</span></h3>';
     }
 
     var ethAdr = Device.EthernetAddress || "None"
@@ -246,6 +269,38 @@ ipcRenderer.on('got_device', (event, db) => {
     resetSidebar();
     setPage('wait');
     playAudio("waiting")
+});
+
+ipcRenderer.on('deactivate_ok', (event,udid) => {
+    // Deactivated, so display activate.
+    document.getElementById('activ').innerHTML = `
+    <br />
+    <a class="waves-effect waves-light btn green" onmouseup="activate('` + udid  + `');" id="activatebutton">Activate</a>
+    `
+
+    document.getElementById('devstat').innerHTML = "Not Activated";
+    document.getElementById('devstat').removeAttribute('class');
+    document.getElementById('devstat').classList.add('red-text');
+
+    document.getElementById('devstat_print').innerHTML = "Not Activated";
+    document.getElementById('devstat_print').removeAttribute('class');
+    document.getElementById('devstat_print').classList.add('red-text');
+});
+
+ipcRenderer.on('activate_ok', (event, udid) => {
+    // Activated, so display deactivate.
+    document.getElementById('activ').innerHTML = `
+    <br />
+    <a class="waves-effect waves-light btn red" onmouseup="deactivate('` + udid + `');" id="deactivatebutton">Deactivate</a>
+    `
+
+    document.getElementById('devstat').innerHTML = "Activated";
+    document.getElementById('devstat').removeAttribute('class');
+    document.getElementById('devstat').classList.add('green-text');
+
+    document.getElementById('devstat_print').innerHTML = "Activated";
+    document.getElementById('devstat_print').removeAttribute('class');
+    document.getElementById('devstat_print').classList.add('green-text');
 });
 
 ipcRenderer.on('new_device', (event, device, out) => {

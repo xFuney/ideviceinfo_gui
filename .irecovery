@@ -1,0 +1,16 @@
+help
+ls
+reboot
+diags
+bgcolor 255 255 255
+bgcolor 255 0 0
+bdev
+bdev write
+fsboot
+FSBOOTY
+FSBOT
+FSBOOT
+exit
+printenv
+]
+help

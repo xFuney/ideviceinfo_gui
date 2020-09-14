@@ -4,7 +4,9 @@
 const { app, BrowserWindow, Tray, dialog } = require('electron');
 const ipc = require('electron').ipcMain;
 
+// Testing
 const iDeviceKit = require('idevicekit');
+// End Testing
 const axios = require('axios');
 const idevicekit = require('idevicekit');
 //const usbDetect = require('usb-detection');
@@ -46,6 +48,8 @@ async function getDevices() {
                     iDeviceKit.diagnostics(res[n]).then( (out) => {
                         ipcWindow.webContents.send('new_device', result, out)
                     })
+
+                    
                     
                     
                 })
@@ -100,6 +104,24 @@ module.exports.init = function() {
         getDevices();
     })
 
+    ipc.on('deactivate', (event, udid) => {
+        iDeviceKit.deactivate(udid).then( () => {
+            ipcWindow.webContents.send('deactivate_ok', udid)
+        }).catch( ( err ) => {
+            console.log("Error deactivating device.")
+            console.log(err)
+        });
+    })
+
+    ipc.on('activate', (event, udid) => {
+        iDeviceKit.activate(udid).then( () => {
+            ipcWindow.webContents.send('activate_ok', udid)
+        }).catch( ( err ) => {
+            console.log("Error activating device.")
+            console.log(err)
+        });
+    })
+
     ipc.on('shutdown_device', (event, udid) => {
         iDeviceKit.shutdown(udid).then( () => {
             ipcWindow.webContents.send('shutdown_ok', udid)
@@ -125,3 +147,4 @@ module.exports.setWindow = function(window) {
     console.log("[IPC] Binded window has been changed.");
     ipcWindow = window;
 }
+
