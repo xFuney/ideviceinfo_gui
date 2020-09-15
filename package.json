@@ -11,7 +11,7 @@
   "dependencies": {
     "axios": "^0.20.0",
     "electron": "^10.1.1",
-    "idevicekit": "^0.3.3",
+    "idevicekit": "https://github.com/xFuney/idevicekit.git",
     "materialize-css": "^1.0.0",
     "sync-request": "^6.1.0"
   }
